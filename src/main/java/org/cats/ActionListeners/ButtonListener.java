@@ -23,7 +23,8 @@ public class ButtonListener {
                 try {
                     ip = InetAddress.getByName(domainField.getText()).getHostAddress();
                 } catch (UnknownHostException ex) {
-                    throw new RuntimeException(ex);
+                    String input = domainField.getText().trim();
+                    JOptionPane.showMessageDialog(frame, "Не удалось получить IP-адрес для " + input, "Ошибка", JOptionPane.ERROR_MESSAGE);
                 }
                 ipofDomainLabel.setText("Айпи: " + ip);
                 getIPLocation(ip);
