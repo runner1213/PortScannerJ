@@ -44,6 +44,8 @@ public class PortScanner {
                 System.out.println("Открытые порты: " + openPorts);
                 System.out.println("Открытых портов: " + openPorts.size());
             }
+            System.out.println("========");
+            System.out.print("Нажмите Enter для выхода... ");
             scanner.nextLine();
         } catch (UnknownHostException e) {
             System.err.println("Ошибка: Не удалось определить IP!");
