@@ -42,6 +42,7 @@ public class PortScanner {
                 System.out.println("Открытые порты не найдены.");
             } else {
                 System.out.println("Открытые порты: " + openPorts);
+                System.out.println("Открытых портов: " + openPorts.size());
             }
             scanner.nextLine();
         } catch (UnknownHostException e) {
