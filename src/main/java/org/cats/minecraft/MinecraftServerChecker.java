@@ -22,34 +22,28 @@ public class MinecraftServerChecker {
             OutputStream out = socket.getOutputStream();
             InputStream in = socket.getInputStream();
 
-            byte[] addressBytes = ip.getBytes(StandardCharsets.UTF_8);
             ByteArrayOutputStream handshake = new ByteArrayOutputStream();
-            handshake.write(0x00);
-            handshake.write(protocol);
-            handshake.write(addressBytes.length);
-            handshake.write(addressBytes);
-            handshake.write((port >> 8) & 0xFF);
-            handshake.write(port & 0xFF);
-            handshake.write(0x01);
+            writeVarInt(handshake, 0x00);
+            writeVarInt(handshake, protocol);
+            writeVarInt(handshake, ip.length());
+            handshake.write(ip.getBytes(StandardCharsets.UTF_8));
+            handshake.write(new byte[]{(byte) (port >> 8), (byte) port, 0x01});
 
-            writeVarInt(out, handshake.size());
-            out.write(handshake.toByteArray());
+            ByteArrayOutputStream packet = new ByteArrayOutputStream();
+            writeVarInt(packet, handshake.size());
+            packet.write(handshake.toByteArray());
 
-            out.write(0x01);
-            out.write(0x00);
+            out.write(packet.toByteArray());
+            out.write(new byte[]{0x01, 0x00});
             out.flush();
 
-            int packetLength = readVarInt(in);
-            if (packetLength < 10) return null;
+            readVarInt(in);
+            readVarInt(in);
 
-            int packetId = readVarInt(in);
             int jsonLength = readVarInt(in);
-            if (jsonLength <= 0 || jsonLength > 32767) return null;
-
-            byte[] jsonData = new byte[jsonLength];
-            if (in.read(jsonData) < jsonLength) return null;
-
+            byte[] jsonData = readFully(in, jsonLength);
             JSONObject json = new JSONObject(new String(jsonData, StandardCharsets.UTF_8));
+
             return new MinecraftServerInfo(
                     port,
                     json.optJSONObject("description").optString("text", "Нет описания"),
@@ -70,16 +64,24 @@ public class MinecraftServerChecker {
     }
 
     private static int readVarInt(InputStream in) throws IOException {
-        int numRead = 0, result = 0;
+        int result = 0, numRead = 0;
         byte read;
         do {
             read = (byte) in.read();
-            if (read == -1) throw new IOException();
-            int value = (read & 0x7F);
-            result |= (value << (7 * numRead));
-            numRead++;
-            if (numRead > 5) throw new IOException();
+            if (read == -1) throw new EOFException("End of stream reached.");
+            result |= (read & 0x7F) << (7 * numRead++);
+            if (numRead >= 5) throw new IOException("VarInt too long.");
         } while ((read & 0x80) != 0);
         return result;
+    }
+
+    private static byte[] readFully(InputStream in, int length) throws IOException {
+        byte[] data = new byte[length];
+        int read, totalRead = 0;
+        while (totalRead < length && (read = in.read(data, totalRead, length - totalRead)) != -1) {
+            totalRead += read;
+        }
+        if (totalRead < length) throw new EOFException("Unexpected end of stream.");
+        return data;
     }
 }

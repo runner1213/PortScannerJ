@@ -46,6 +46,8 @@ public class PortScanner {
             } else {
                 System.out.println("Открытые порты: " + openPorts);
                 System.out.println("Открытых портов: " + openPorts.size());
+                System.out.print("Нажмите Enter для продолжения... ");
+                scanner.nextLine();
                 for (int port : openPorts) {
                     MinecraftServerInfo mcInfo = MinecraftServerChecker.checkMinecraftServer(ip, port);
                     if (mcInfo != null) {
