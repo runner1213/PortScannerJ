@@ -1,5 +1,8 @@
 package org.cats.core;
 
+import org.cats.minecraft.MinecraftServerChecker;
+import org.cats.minecraft.MinecraftServerInfo;
+
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +46,15 @@ public class PortScanner {
             } else {
                 System.out.println("Открытые порты: " + openPorts);
                 System.out.println("Открытых портов: " + openPorts.size());
+                for (int port : openPorts) {
+                    MinecraftServerInfo mcInfo = MinecraftServerChecker.checkMinecraftServer(ip, port);
+                    if (mcInfo != null) {
+                        System.out.println("=======");
+                        System.out.println(mcInfo);
+                    }
+                    System.out.print("Нажмите Enter для продолжения... ");
+                    scanner.nextLine();
+                }
             }
             System.out.println("========");
             System.out.print("Нажмите Enter для выхода... ");

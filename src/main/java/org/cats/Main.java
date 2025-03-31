@@ -23,6 +23,8 @@ public class Main {
         Elements.init();
         ButtonListener.init();
 
+        JOptionPane.showMessageDialog(frame, "Убедитесь, что приложение открыто через терминал!");
+
         frame.setVisible(true);
     }
 }

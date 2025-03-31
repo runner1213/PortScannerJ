@@ -23,8 +23,6 @@ public class Elements {
             UIManager.put("Spinner.border", BorderFactory.createLineBorder(Color.GRAY));
         } catch (Exception ignored) {}
 
-        JOptionPane.showMessageDialog(frame, "Убедитесь, что приложение открыто через терминал!");
-
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setSize(800, 600);
         frame.setLayout(null);
