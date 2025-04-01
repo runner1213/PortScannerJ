@@ -4,6 +4,7 @@ import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import org.json.JSONObject;
+import org.json.JSONException;
 
 public class MinecraftServerChecker {
     private static final int[] PROTOCOLS = {0x47, 0x4D};
@@ -42,15 +43,16 @@ public class MinecraftServerChecker {
 
             int jsonLength = readVarInt(in);
             byte[] jsonData = readFully(in, jsonLength);
-            JSONObject json = new JSONObject(new String(jsonData, StandardCharsets.UTF_8));
+            String response = new String(jsonData, StandardCharsets.UTF_8);
+            JSONObject json = new JSONObject(response);
 
-            return new MinecraftServerInfo(
-                    port,
-                    json.optJSONObject("description").optString("text", "Нет описания"),
-                    json.optJSONObject("players").optInt("online", 0),
-                    ip + ":" + port
-            );
-        } catch (IOException e) {
+            JSONObject description = json.optJSONObject("description");
+            String motd = (description != null) ? description.optString("text", "Нет описания") : "Нет описания";
+            JSONObject players = json.optJSONObject("players");
+            int online = (players != null) ? players.optInt("online", 0) : 0;
+
+            return new MinecraftServerInfo(port, motd, online, ip + ":" + port);
+        } catch (IOException | JSONException e) {
             return null;
         }
     }
@@ -64,14 +66,14 @@ public class MinecraftServerChecker {
     }
 
     private static int readVarInt(InputStream in) throws IOException {
-        int result = 0, numRead = 0;
-        byte read;
-        do {
-            read = (byte) in.read();
+        int result = 0, numRead = 0, read;
+        while (true) {
+            read = in.read();
             if (read == -1) throw new EOFException("End of stream reached.");
             result |= (read & 0x7F) << (7 * numRead++);
+            if ((read & 0x80) == 0) break;
             if (numRead >= 5) throw new IOException("VarInt too long.");
-        } while ((read & 0x80) != 0);
+        }
         return result;
     }
 

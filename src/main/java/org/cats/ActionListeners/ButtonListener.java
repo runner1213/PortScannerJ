@@ -11,7 +11,7 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 
-import static org.cats.Main.*;
+import static org.cats.ui.Elements.*;
 
 public class ButtonListener {
     public static void init() {
