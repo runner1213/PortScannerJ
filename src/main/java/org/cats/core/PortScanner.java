@@ -5,6 +5,7 @@ import org.cats.minecraft.MinecraftServerInfo;
 
 import java.net.*;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Scanner;
@@ -17,51 +18,41 @@ public class PortScanner {
         try {
             String ip = InetAddress.getByName(host).getHostAddress();
             ExecutorService executor = Executors.newFixedThreadPool(threads);
-            List<Integer> openPorts = new ArrayList<>();
+            List<Integer> openPorts = Collections.synchronizedList(new ArrayList<>());
             Scanner scanner = new Scanner(System.in);
-
             System.out.println("Сканирование портов " + startPort + "-" + endPort + " на " + ip + "...");
-
             for (int port = startPort; port <= endPort; port++) {
                 final int finalPort = port;
                 executor.execute(() -> {
                     boolean isOpen = scanPort(ip, finalPort);
                     System.out.println("Порт " + finalPort + " " + (isOpen ? "открыт" : "закрыт"));
-
                     if (isOpen) {
-                        synchronized (openPorts) {
-                            openPorts.add(finalPort);
-                        }
+                        openPorts.add(finalPort);
                     }
                 });
             }
-
             executor.shutdown();
             if (!executor.awaitTermination(2, TimeUnit.MINUTES)) {
                 System.err.println("Предупреждение: Сканирование заняло слишком много времени и было прервано.");
             }
-
             System.out.println("Сканирование завершено.");
             if (openPorts.isEmpty()) {
                 System.out.println("Открытые порты не найдены.");
             } else {
                 System.out.println("Открытые порты: " + openPorts);
                 System.out.println("Открытых портов: " + openPorts.size());
-                System.out.print("Нажмите Enter для продолжения... ");
-                scanner.nextLine();
-                for (int port : openPorts) {
-                    MinecraftServerInfo mcInfo = MinecraftServerChecker.checkMinecraftServer(ip, port);
-                    if (mcInfo != null) {
-                        System.out.println("=======");
-                        System.out.println(mcInfo);
-                    }
-                    System.out.println("Нажмите Enter для продолжения или 1 для выхода... ");
-                    System.out.print(">>> ");
-                    String input = scanner.nextLine();
-                    if (Objects.equals(input, "1")) {
-                        System.out.println("Вы уверены? Эта функция может работать нестабильно.");
-                        System.out.print(">>> ");
-                        scanner.nextLine();
+                System.out.println("Нажмите 1 для проверки серверов Minecraft на открытых портах или Enter для выхода...");
+                System.out.print(">>> ");
+                String input = scanner.nextLine();
+                if (Objects.equals(input, "1")) {
+                    for (int port : openPorts) {
+                        MinecraftServerInfo mcInfo = MinecraftServerChecker.checkMinecraftServer(ip, port);
+                        if (mcInfo != null) {
+                            System.out.println("=======");
+                            System.out.println(mcInfo);
+                            System.out.println("Нажмите Enter для продолжения...");
+                            scanner.nextLine();
+                        }
                     }
                 }
             }
@@ -73,6 +64,8 @@ public class PortScanner {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             System.err.println("Сканирование прервано!");
+        } catch (Exception e) {
+            System.err.println("Непредвиденная ошибка: " + e.getMessage());
         }
     }
 
