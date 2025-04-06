@@ -6,6 +6,7 @@ import org.cats.minecraft.MinecraftServerInfo;
 import java.net.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -54,8 +55,14 @@ public class PortScanner {
                         System.out.println("=======");
                         System.out.println(mcInfo);
                     }
-                    System.out.print("Нажмите Enter для продолжения... ");
-                    scanner.nextLine();
+                    System.out.println("Нажмите Enter для продолжения или 1 для выхода... ");
+                    System.out.print(">>> ");
+                    String input = scanner.nextLine();
+                    if (Objects.equals(input, "1")) {
+                        System.out.println("Вы уверены? Эта функция может работать нестабильно.");
+                        System.out.print(">>> ");
+                        scanner.nextLine();
+                    }
                 }
             }
             System.out.println("========");
